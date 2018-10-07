@@ -7,11 +7,23 @@ from datetime import datetime
 from threading import Thread
 
 
+def get_session():
+    return boto3.session.Session(profile_name='chortle-system')
+
+
+def get_dynamodb_table():
+    dynamo = get_session().resource('dynamodb')
+    return dynamo.Table('chortle-model')
+
+
+def get_sqs_queue():
+    sqs = get_session().resource('sqs')
+    return sqs.get_queue_by_name(QueueName='chortle')
+
+
 class UpdateChoreStatus(Thread):
     def run(self):
-        dynamo = boto3.resource('dynamodb')
-        table = dynamo.Table('chortle-model')
-
+        table = get_dynamodb_table()
         while(True):
             for item in table.scan()['Items']:
                 current_time = datetime.now()
@@ -28,12 +40,8 @@ class UpdateChoreStatus(Thread):
 
 class ProcessButtonPresses(Thread):
     def run(self):
-        sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName='chortle')
-
-        dynamo = boto3.resource('dynamodb')
-        table = dynamo.Table('chortle-model')
-
+        queue = get_sqs_queue()
+        table = get_dynamodb_table()
         while(True):
             messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=20)
             for message in messages:
