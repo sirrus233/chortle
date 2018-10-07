@@ -1,12 +1,5 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-Chortle is a dashboard for tracking chores using a IoT button.
-
-In this magical world there is no more fighting over who cleans the catbox, or who did the dishes, you simply push the button and it marks the task as done.
-The dashboard warns you when you're behind on chores and lets you choose what to do.
-
-
-
 Below you will find some information on how to perform common tasks.<br>
 You can find the most recent version of this guide [here](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
