@@ -1,3 +1,5 @@
+const TABLE_HEADERS = ["Chore", "Status"]
+
 function clearTable() {
     var table = document.getElementById("chore-chart");
     while (table.hasChildNodes()) {
@@ -6,15 +8,13 @@ function clearTable() {
 }
 
 function buildTableHeader() {
-    var choreHeader = document.createElement("TH");
-    choreHeader.innerText = "Chore";
-
-    var statusHeader = document.createElement("TH");
-    statusHeader.innerText = "Status";
-
     var headerRow = document.createElement("TR");
-    headerRow.appendChild(choreHeader)
-    headerRow.appendChild(statusHeader)
+
+    TABLE_HEADERS.forEach(function(header) {
+        var headerElement = document.createElement("TH");
+        headerElement.innerText = header;
+        headerRow.appendChild(headerElement);
+    });
 
     document.getElementById("chore-chart").appendChild(headerRow);
 }
