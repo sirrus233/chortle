@@ -1,4 +1,5 @@
-const TABLE_HEADERS = ["Chore", "Status"]
+const POLL_FREQUENCY_SECONDS = 5;
+const TABLE_HEADERS = ["Chore", "Status"];
 
 function clearTable() {
     var table = document.getElementById("chore-chart");
@@ -49,7 +50,7 @@ async function pollDynamoLoop() {
             if (err) console.log(err, err.stack);
             else buildTable(data.Items);
         });
-        await sleep(60*1000);
+        await sleep(POLL_FREQUENCY_SECONDS*1000);
     }
 }
 
