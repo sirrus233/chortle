@@ -2,7 +2,9 @@ import os
 import boto3
 import time
 
+
 CHORTLE_DYNAMO_TABLE = os.environ['CHORTLE_DYNAMO_TABLE'] 
+
 
 def lambda_handler(event, context):
     # Deserialize button event JSON
