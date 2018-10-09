@@ -1,5 +1,5 @@
 const POLL_FREQUENCY_SECONDS = 5;
-const TABLE_HEADERS = ["Chore", "Status"];
+const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 
 function clearTable() {
     var table = document.getElementById("chore-chart");
@@ -32,9 +32,19 @@ function buildTable(choreList) {
         var choreStatusTd = document.createElement("TD");
         choreStatusTd.innerText = choreStatus
 
+        var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
+        var now = Math.floor(new Date().getTime() / 1000);
+        var timeRemaining = choreExpireTime - now;
+        var minutes = Math.floor(timeRemaining / 60);
+        var seconds = Math.floor(timeRemaining % 60);
+        var choreTime = minutes + ":" + seconds;
+        var choreTimeTd = document.createElement("TD");
+        choreTimeTd.innerText = choreTime;
+
         var tr = document.createElement("TR");
-        tr.appendChild(choreNameTd)
-        tr.appendChild(choreStatusTd)
+        tr.appendChild(choreNameTd);
+        tr.appendChild(choreStatusTd);
+        tr.appendChild(choreTimeTd);
         document.getElementById("chore-chart").appendChild(tr);
     });
 }
