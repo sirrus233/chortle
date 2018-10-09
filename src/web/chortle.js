@@ -39,19 +39,11 @@ function buildTable(choreList) {
     });
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function pollDynamoLoop() {
-    var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    while (true) {
-        dynamodb.scan({TableName: "chortle-model"}, function (err, data) {
-            if (err) console.log(err, err.stack);
-            else buildTable(data.Items);
-        });
-        await sleep(POLL_FREQUENCY_SECONDS*1000);
-    }
+function pollDynamo(dynamodb) {
+    dynamodb.scan({TableName: "chortle-model"}, function (err, data) {
+        if (err) console.log(err, err.stack);
+        else buildTable(data.Items);
+    });
 }
 
 function setupAWSConfig() {
@@ -64,4 +56,5 @@ function setupAWSConfig() {
 }
 
 setupAWSConfig();
-pollDynamoLoop();
+var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+setInterval(pollDynamo, POLL_FREQUENCY_SECONDS*1000, dynamodb);
