@@ -1,58 +1,57 @@
 const POLL_FREQUENCY_SECONDS = 5;
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
+const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
+const TABLE_DATA_FUNCTIONS = {
+    "chore-name": function (choreRow) {
+        return choreRow.chore.S;
+    },
 
-function clearTable() {
-    var table = document.getElementById("chore-chart");
+    "chore-status": function (choreRow) {
+        return choreRow.status_ok.BOOL;
+    },
+
+    "chore-time": function (choreRow) {
+        var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
+        var now = Math.floor(new Date().getTime() / 1000);
+        var timeRemaining = choreExpireTime - now;
+        var neg = timeRemaining < 0;
+        if (neg) timeRemaining *= -1;
+        var minutes = Math.floor(timeRemaining / 60);
+        var seconds = Math.floor(timeRemaining % 60);
+        var choreTime = ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
+        if (neg) choreTime = "-"+choreTime;
+        return choreTime;
+    }
+}
+
+function clearTable(table) {
     while (table.hasChildNodes()) {
         table.removeChild(table.firstChild)
     }
 }
 
-function buildTableHeader() {
+function buildTableHeader(table) {
     var headerRow = document.createElement("TR");
-
     TABLE_HEADERS.forEach(function(header) {
         var headerElement = document.createElement("TH");
         headerElement.innerText = header;
         headerRow.appendChild(headerElement);
     });
-
-    document.getElementById("chore-chart").appendChild(headerRow);
-}
-
-function getChoreTime(choreRow) {
-    var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
-    var now = Math.floor(new Date().getTime() / 1000);
-    var timeRemaining = choreExpireTime - now;
-    var neg = timeRemaining < 0;
-    if (neg) timeRemaining *= -1;
-    var minutes = Math.floor(timeRemaining / 60);
-    var seconds = Math.floor(timeRemaining % 60);
-    var choreTime = ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
-    if (neg) choreTime = "-"+choreTime;
-    return choreTime;
+    table.appendChild(headerRow);
 }
 
 function buildTable(choreList) {
-    clearTable();
-    buildTableHeader();
+    var table = document.getElementById("chore-chart");
+    clearTable(table);
+    buildTableHeader(table);
     choreList.forEach(function(choreRow) {
-        var choreName = choreRow.chore.S;
-        var choreNameTd = document.createElement("TD");
-        choreNameTd.innerText = choreName
-    
-        var choreStatus = choreRow.status_ok.BOOL;
-        var choreStatusTd = document.createElement("TD");
-        choreStatusTd.innerText = choreStatus
-
-        var choreTimeTd = document.createElement("TD");
-        choreTimeTd.innerText = getChoreTime(choreRow);
-
-        var tr = document.createElement("TR");
-        tr.appendChild(choreNameTd);
-        tr.appendChild(choreStatusTd);
-        tr.appendChild(choreTimeTd);
-        document.getElementById("chore-chart").appendChild(tr);
+        var row = document.createElement("TR");
+        TABLE_DATA_FIELDS.forEach(function(field) {
+            var data = document.createElement("TD");
+            data.innerText = TABLE_DATA_FUNCTIONS[field](choreRow);
+            row.appendChild(data);
+        });
+        table.appendChild(row);
     });
 }
 
