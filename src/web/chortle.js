@@ -3,14 +3,19 @@ const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
 const TABLE_DATA_FUNCTIONS = {
     "chore-name": function (choreRow) {
-        return choreRow.chore.S;
+        var data = document.createElement("TD");
+        data.innerText = choreRow.chore.S;
+        return data;
     },
 
     "chore-status": function (choreRow) {
-        return choreRow.status_ok.BOOL;
+        var data = document.createElement("TD");
+        data.innerText = choreRow.status_ok.BOOL;
+        return data;
     },
 
     "chore-time": function (choreRow) {
+        var data = document.createElement("TD");
         var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
         var now = Math.floor(new Date().getTime() / 1000);
         var timeRemaining = choreExpireTime - now;
@@ -20,7 +25,8 @@ const TABLE_DATA_FUNCTIONS = {
         var seconds = Math.floor(timeRemaining % 60);
         var choreTime = ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
         if (neg) choreTime = "-"+choreTime;
-        return choreTime;
+        data.innerText = choreTime;
+        return data;
     }
 }
 
@@ -47,9 +53,7 @@ function buildTable(choreList) {
     choreList.forEach(function(choreRow) {
         var row = document.createElement("TR");
         TABLE_DATA_FIELDS.forEach(function(field) {
-            var data = document.createElement("TD");
-            data.innerText = TABLE_DATA_FUNCTIONS[field](choreRow);
-            row.appendChild(data);
+            row.appendChild(TABLE_DATA_FUNCTIONS[field](choreRow));
         });
         table.appendChild(row);
     });
