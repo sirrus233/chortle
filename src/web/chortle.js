@@ -35,9 +35,12 @@ function buildTable(choreList) {
         var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
         var now = Math.floor(new Date().getTime() / 1000);
         var timeRemaining = choreExpireTime - now;
+        var neg = timeRemaining < 0;
+        if (neg) timeRemaining *= -1;
         var minutes = Math.floor(timeRemaining / 60);
         var seconds = Math.floor(timeRemaining % 60);
-        var choreTime = minutes + ":" + seconds;
+        var choreTime = ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
+        if (neg) choreTime = "-"+choreTime;
         var choreTimeTd = document.createElement("TD");
         choreTimeTd.innerText = choreTime;
 
