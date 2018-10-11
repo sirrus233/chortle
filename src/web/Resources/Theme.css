@@ -1,26 +1,13 @@
-.App {
-  text-align: center;
-}
-
 h1 {
-  background-color: #ADD8E6;
-  min-height: 10vh;
-  display: flex;
-  align-items: center;
-  justify-content: left;
-  font-size: calc(10px + 2vmin);
-  color: white;
-  padding-top: 2vmin;
-  padding-left: 2vmin;
-}
-.status_good{
-	background-color:green
-}
-.status_aging{
-	background-color:yellow
-}
-.status_bad{
-	background-color:red
+	background-color: #ADD8E6;
+	min-height: 10vh;
+	display: flex;
+	align-items: center;
+	justify-content: left;
+	font-size: calc(10px + 2vmin);
+	color: white;
+	padding-top: 2vmin;
+	padding-left: 2vmin;
 }
 
 table{
@@ -33,4 +20,14 @@ table{
 td{
 	width:33%;
 	padding:5px;
+}
+
+.status_good{
+	background-color:green
+}
+.status_aging{
+	background-color:yellow
+}
+.status_bad{
+	background-color:red
 }
