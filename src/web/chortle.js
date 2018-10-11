@@ -10,7 +10,9 @@ const TABLE_DATA_FUNCTIONS = {
 
     "chore-status": function (choreRow) {
         var data = document.createElement("TD");
-        data.innerText = choreRow.status_ok.BOOL;
+        var status = choreRow.status_ok.BOOL;
+        if (status) data.className = "status_good";
+        else data.className = "status_bad";
         return data;
     },
 
