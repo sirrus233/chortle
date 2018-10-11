@@ -61,9 +61,10 @@ function buildTable(choreList) {
 function getStringFromTime(timeValueSeconds) {
     var neg = timeValueSeconds < 0;
     if (neg) timeValueSeconds *= -1;
-    var minutes = Math.floor(timeValueSeconds / 60);
+    var hours = Math.floor(timeValueSeconds / 3600);
+    var minutes = Math.floor((timeValueSeconds % 3600) / 60);
     var seconds = Math.floor(timeValueSeconds % 60);
-    var timeString = minutes + ":" + ("0"+seconds).slice(-2);
+    var timeString = hours + ":" + ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
     if (neg) timeString = "-"+timeString;
     return timeString;
 }
@@ -72,9 +73,10 @@ function getTimeFromString(timeString) {
     var neg = timeString.startsWith("-");
     if (neg) timeString = timeString.slice(1);
     var timeStringArray = timeString.split(":");
-    var minutes = parseInt(timeStringArray[0]);
-    var seconds = parseInt(timeStringArray[1]);
-    var timeVal = 60*minutes + seconds;
+    var hours = parseInt(timeStringArray[0]);
+    var minutes = parseInt(timeStringArray[1]);
+    var seconds = parseInt(timeStringArray[2]);
+    var timeVal = 3600*hours + 60*minutes + seconds;
     if (neg) timeVal *= -1;
     return timeVal;
 }
