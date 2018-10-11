@@ -19,13 +19,7 @@ const TABLE_DATA_FUNCTIONS = {
         var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
         var now = Math.floor(new Date().getTime() / 1000);
         var timeRemaining = choreExpireTime - now;
-        var neg = timeRemaining < 0;
-        if (neg) timeRemaining *= -1;
-        var minutes = Math.floor(timeRemaining / 60);
-        var seconds = Math.floor(timeRemaining % 60);
-        var choreTime = minutes + ":" + ("0"+seconds).slice(-2);
-        if (neg) choreTime = "-"+choreTime;
-        data.innerText = choreTime;
+        data.innerText = getStringFromTime(timeRemaining);
         data.className = "timer";
         return data;
     }
@@ -60,18 +54,33 @@ function buildTable(choreList) {
     }
 }
 
-function tickTimers() {
-    // TODO maybe move the time code from above, including formatting, down here?
-    // change to foreach loop
-    var timers = document.getElementsByClassName("timer");
-    var timer = timers[0];
-    var timeStringArray = timer.innerText.split(":");
+function getStringFromTime(timeValueSeconds) {
+    var neg = timeValueSeconds < 0;
+    if (neg) timeValueSeconds *= -1;
+    var minutes = Math.floor(timeValueSeconds / 60);
+    var seconds = Math.floor(timeValueSeconds % 60);
+    var timeString = minutes + ":" + ("0"+seconds).slice(-2);
+    if (neg) timeString = "-"+timeString;
+    return timeString;
+}
+
+function getTimeFromString(timeString) {
+    var neg = timeString.startsWith("-");
+    if (neg) timeString = timeString.slice(1);
+    var timeStringArray = timeString.split(":");
     var minutes = parseInt(timeStringArray[0]);
     var seconds = parseInt(timeStringArray[1]);
-    var current = new Date();
-    current.setMinutes(minutes);
-    current.setSeconds(seconds-1);
-    timer.innerText = current.getMinutes() + ":" + current.getSeconds();
+    var timeVal = 60*minutes + seconds;
+    if (neg) timeVal *= -1;
+    return timeVal;
+}
+
+function tickTimers() {
+    var timers = document.getElementsByClassName("timer");
+    for (var i = 0; i < timers.length; i++) {
+        var timer = timers[i];
+        timer.innerText = getStringFromTime(getTimeFromString(timer.innerText) - 1);
+    }
 }
 
 function pollDynamo(dynamodb) {
