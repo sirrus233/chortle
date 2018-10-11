@@ -3,12 +3,13 @@ import boto3
 import time
 
 
+CHORTLE_DYNAMO_TABLE = os.environ['CHORTLE_DYNAMO_TABLE']
 UPDATE_PERIOD_SECONDS = os.environ['UPDATE_PERIOD_SECONDS']
 
 
 def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table(os.environ['CHORTLE_DYNAMO_TABLE'])
+    table = dynamodb.Table(CHORTLE_DYNAMO_TABLE)
 
     timeout = time.time() + 60
     while time.time() < timeout:
