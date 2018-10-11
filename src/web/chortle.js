@@ -23,9 +23,10 @@ const TABLE_DATA_FUNCTIONS = {
         if (neg) timeRemaining *= -1;
         var minutes = Math.floor(timeRemaining / 60);
         var seconds = Math.floor(timeRemaining % 60);
-        var choreTime = ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
+        var choreTime = minutes + ":" + ("0"+seconds).slice(-2);
         if (neg) choreTime = "-"+choreTime;
         data.innerText = choreTime;
+        data.className = "timer";
         return data;
     }
 }
@@ -38,11 +39,11 @@ function clearTable(table) {
 
 function buildTableHeader(table) {
     var headerRow = document.createElement("TR");
-    TABLE_HEADERS.forEach(function(header) {
+    for (var i = 0; i < TABLE_HEADERS.length; i++) {
         var headerElement = document.createElement("TH");
-        headerElement.innerText = header;
+        headerElement.innerText = TABLE_HEADERS[i];
         headerRow.appendChild(headerElement);
-    });
+    }
     table.appendChild(headerRow);
 }
 
@@ -50,13 +51,27 @@ function buildTable(choreList) {
     var table = document.getElementById("chore-chart");
     clearTable(table);
     buildTableHeader(table);
-    choreList.forEach(function(choreRow) {
+    for (var i = 0; i < choreList.length; i++) {
         var row = document.createElement("TR");
-        TABLE_DATA_FIELDS.forEach(function(field) {
-            row.appendChild(TABLE_DATA_FUNCTIONS[field](choreRow));
-        });
+        for (var j = 0; j < TABLE_DATA_FIELDS.length; j++) {
+            row.appendChild(TABLE_DATA_FUNCTIONS[TABLE_DATA_FIELDS[j]](choreList[i]));
+        }
         table.appendChild(row);
-    });
+    }
+}
+
+function tickTimers() {
+    // TODO maybe move the time code from above, including formatting, down here?
+    // change to foreach loop
+    var timers = document.getElementsByClassName("timer");
+    var timer = timers[0];
+    var timeStringArray = timer.innerText.split(":");
+    var minutes = parseInt(timeStringArray[0]);
+    var seconds = parseInt(timeStringArray[1]);
+    var current = new Date();
+    current.setMinutes(minutes);
+    current.setSeconds(seconds-1);
+    timer.innerText = current.getMinutes() + ":" + current.getSeconds();
 }
 
 function pollDynamo(dynamodb) {
@@ -78,3 +93,4 @@ function setupAWSConfig() {
 setupAWSConfig();
 var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 setInterval(pollDynamo, POLL_FREQUENCY_SECONDS*1000, dynamodb);
+setInterval(tickTimers, 1000)
