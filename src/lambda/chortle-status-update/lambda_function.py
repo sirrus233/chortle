@@ -3,6 +3,9 @@ import boto3
 import time
 
 
+UPDATE_PERIOD_SECONDS = os.environ['UPDATE_PERIOD_SECONDS']
+
+
 def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(os.environ['CHORTLE_DYNAMO_TABLE'])
@@ -27,4 +30,4 @@ def lambda_handler(event, context):
                 table.update_item(Key=key, UpdateExpression=expr, ExpressionAttributeValues=expr_attrs)
                 print('Update complete')
 
-        time.sleep(5)
+        time.sleep(UPDATE_PERIOD_SECONDS)
