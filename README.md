@@ -1,4 +1,5 @@
-# chortle
+Chortle
+=======
 IoT based chore tracking dashboard
 We designed this to leverage AWS IoT buttons and display a chart of household chores. 
 
