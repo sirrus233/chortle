@@ -13,25 +13,24 @@ h1 {
   padding-top: 2vmin;
   padding-left: 2vmin;
 }
-
-.App-link {
-  color: #000080;
-}
-
 .status_good{
 	background-color:green
+}
+.status_aging{
+	background-color:yellow
 }
 .status_bad{
 	background-color:red
 }
 
-.chore-chart{
-	display:block;
-	border: 1px;
-	border-color:black;
+table{
+	width:90%;
+	padding:5 px;
+	border:1px;
+	border-color: black;
 }
+
 td{
-	display: inline-table;
-	width:40px;
+	width:33%;
 	padding:5px;
 }
