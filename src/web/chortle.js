@@ -11,13 +11,15 @@ const TABLE_DATA_FUNCTIONS = {
     "chore-status": function (choreRow) {
         var data = document.createElement("TD");
         var status = choreRow.status_ok.BOOL;
-        if (status) data.className = "status_good";
+        var active = choreRow.active.BOOL;
+        if (status || !active) data.className = "status_good";
         else data.className = "status_bad";
         return data;
     },
 
     "chore-time": function (choreRow) {
         var data = document.createElement("TD");
+        if (!choreRow.active.BOOL) return data;
         var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
         var now = Math.floor(new Date().getTime() / 1000);
         var timeRemaining = choreExpireTime - now;
