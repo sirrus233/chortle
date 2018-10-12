@@ -4,7 +4,7 @@ src_dir=$(dirname "$0")/src
 lambda_dir=${src_dir}/lambda
 build_dir=$(dirname "$0")/build
 
-lambda_functions=('chortle-button-press' 'chortle-status-update')
+lambda_functions=('chortle-button-press')
 
 mkdir -p $build_dir
 

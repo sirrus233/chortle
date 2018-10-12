@@ -1,4 +1,5 @@
 const POLL_FREQUENCY_SECONDS = 2;
+
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
 const TABLE_DATA_FUNCTIONS = {
@@ -10,23 +11,35 @@ const TABLE_DATA_FUNCTIONS = {
 
     "chore-status": function (choreRow) {
         var data = document.createElement("TD");
-        var status = choreRow.status_ok.BOOL;
-        var active = choreRow.active.BOOL;
-        if (status || !active) data.className = "status_good";
-        else data.className = "status_bad";
+        if (getTimeRemaining(choreRow) < 0 && choreRow.active.BOOL) data.className = "status_bad";
+        else data.className = "status_good";
         return data;
     },
 
     "chore-time": function (choreRow) {
         var data = document.createElement("TD");
         if (!choreRow.active.BOOL) return data;
-        var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
-        var now = Math.floor(new Date().getTime() / 1000);
-        var timeRemaining = choreExpireTime - now;
-        data.innerText = getStringFromTime(timeRemaining);
-        data.className = "timer";
+        data.innerText = getStringFromTime(getTimeRemaining(choreRow));
         return data;
     }
+}
+
+function getTimeRemaining(choreRow) {
+    var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
+    var now = Math.floor(new Date().getTime() / 1000);
+    var timeRemaining = choreExpireTime - now;
+    return timeRemaining;
+}
+
+function getStringFromTime(timeValueSeconds) {
+    var neg = timeValueSeconds < 0;
+    if (neg) timeValueSeconds *= -1;
+    var hours = Math.floor(timeValueSeconds / 3600);
+    var minutes = Math.floor((timeValueSeconds % 3600) / 60);
+    var seconds = Math.floor(timeValueSeconds % 60);
+    var timeString = hours + ":" + ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
+    if (neg) timeString = "-"+timeString;
+    return timeString;
 }
 
 function clearTable(table) {
@@ -45,54 +58,26 @@ function buildTableHeader(table) {
     table.appendChild(headerRow);
 }
 
-function buildTable(choreList) {
+function buildTable() {
     var table = document.getElementById("chore-chart");
     clearTable(table);
     buildTableHeader(table);
-    for (var i = 0; i < choreList.length; i++) {
-        var row = document.createElement("TR");
+    for (var i = 0; i < CHORE_DATA.length; i++) {
+        var choreRow = CHORE_DATA[i];
+        var rowElement = document.createElement("TR");
         for (var j = 0; j < TABLE_DATA_FIELDS.length; j++) {
-            row.appendChild(TABLE_DATA_FUNCTIONS[TABLE_DATA_FIELDS[j]](choreList[i]));
+            var field = TABLE_DATA_FIELDS[j];
+            rowElement.appendChild(TABLE_DATA_FUNCTIONS[field](choreRow));
         }
-        table.appendChild(row);
+        table.appendChild(rowElement);
     }
 }
 
-function getStringFromTime(timeValueSeconds) {
-    var neg = timeValueSeconds < 0;
-    if (neg) timeValueSeconds *= -1;
-    var hours = Math.floor(timeValueSeconds / 3600);
-    var minutes = Math.floor((timeValueSeconds % 3600) / 60);
-    var seconds = Math.floor(timeValueSeconds % 60);
-    var timeString = hours + ":" + ("0"+minutes).slice(-2) + ":" + ("0"+seconds).slice(-2);
-    if (neg) timeString = "-"+timeString;
-    return timeString;
-}
-
-function getTimeFromString(timeString) {
-    var neg = timeString.startsWith("-");
-    if (neg) timeString = timeString.slice(1);
-    var timeStringArray = timeString.split(":");
-    var hours = parseInt(timeStringArray[0]);
-    var minutes = parseInt(timeStringArray[1]);
-    var seconds = parseInt(timeStringArray[2]);
-    var timeVal = 3600*hours + 60*minutes + seconds;
-    if (neg) timeVal *= -1;
-    return timeVal;
-}
-
-function tickTimers() {
-    var timers = document.getElementsByClassName("timer");
-    for (var i = 0; i < timers.length; i++) {
-        var timer = timers[i];
-        timer.innerText = getStringFromTime(getTimeFromString(timer.innerText) - 1);
-    }
-}
-
+var CHORE_DATA = [];
 function pollDynamo(dynamodb) {
     dynamodb.scan({TableName: "chortle-model"}, function (err, data) {
         if (err) console.log(err, err.stack);
-        else buildTable(data.Items);
+        else CHORE_DATA = data.Items;
     });
 }
 
@@ -108,4 +93,4 @@ function setupAWSConfig() {
 setupAWSConfig();
 var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 setInterval(pollDynamo, POLL_FREQUENCY_SECONDS*1000, dynamodb);
-setInterval(tickTimers, 1000)
+setInterval(buildTable, 1000);
