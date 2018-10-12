@@ -1,4 +1,4 @@
-const POLL_FREQUENCY_SECONDS = 2;
+const POLL_FREQUENCY_SECONDS = 0.5;
 
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
