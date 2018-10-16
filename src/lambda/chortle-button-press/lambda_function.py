@@ -19,7 +19,8 @@ def lambda_handler(event, context):
     table = dynamodb.Table(CHORTLE_DYNAMO_TABLE)
     key = {'button_serial': serial_number, 'click_type': click_type}
 
-    entry = table.get_item(Key=key)
+    entry = table.get_item(Key=key)['Item']
+    print('Retrieved entry from table: {}'.format(entry))
 
     try:
         expr, expr_attrs = get_update_expression(entry)
