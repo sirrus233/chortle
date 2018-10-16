@@ -1,9 +1,10 @@
 import os
 import boto3
-import time
+
+from strategy_handler import get_update_expression, UnknownStrategyException
 
 
-CHORTLE_DYNAMO_TABLE = os.environ['CHORTLE_DYNAMO_TABLE'] 
+CHORTLE_DYNAMO_TABLE = os.environ['CHORTLE_DYNAMO_TABLE']
 
 
 def lambda_handler(event, context):
@@ -16,10 +17,12 @@ def lambda_handler(event, context):
     
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(CHORTLE_DYNAMO_TABLE)
-    
-    current_time = int(time.time())
-    key = {'button_serial': serial_number}
-    expr = 'SET last_pressed_time=:t'
-    expr_attrs = {':t': current_time}
-    table.update_item(Key=key, UpdateExpression=expr, ExpressionAttributeValues=expr_attrs)
-    print('Table updated with new timestamp {}'.format(current_time))
+    key = {'button_serial': serial_number, 'click_type': click_type}
+
+    entry = table.get_item(Key=key)
+
+    try:
+        expr, expr_attrs = get_update_expression(entry)
+        table.update_item(Key=key, UpdateExpression=expr, ExpressionAttributeValues=expr_attrs)
+    except UnknownStrategyException:
+        print('Unknown strategy: {}'.format(entry['strategy']))
