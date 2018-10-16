@@ -1,4 +1,5 @@
 const POLL_FREQUENCY_SECONDS = 0.5;
+const MAX_CHORE_DISPLAY_TIME = 3*60*60;
 
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
@@ -18,7 +19,8 @@ const TABLE_DATA_FUNCTIONS = {
 
     "chore-time": function (choreRow) {
         var data = document.createElement("TD");
-        if (!choreRow.active.BOOL) return data;
+        var timeRemaining = getTimeRemaining(choreRow)
+        if (!choreRow.active.BOOL || timeRemaining > MAX_CHORE_DISPLAY_TIME) return data;
         data.innerText = getStringFromTime(getTimeRemaining(choreRow));
         return data;
     }
