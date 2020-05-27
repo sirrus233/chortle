@@ -19,8 +19,7 @@ UpdateExpression = Tuple[TableKey, TableExpr, TableExprAttrs]
 
 
 def update_entry_time(entry: TableEntry) -> UpdateExpression:
-    """
-    Construct a dynamo expression that will update the "last pressed time" for a chore.
+    """Construct a dynamo expression that will update the "last pressed time" for a chore.
 
     :param entry: TableEntry for this chore.
     :return: Expression to update the last pressed time in the table.
