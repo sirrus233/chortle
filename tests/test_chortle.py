@@ -1,7 +1,8 @@
 import os
+from dataclasses import asdict
 
-import boto3
 import pytest
+from chortle.build import Chore, build_chortle_table, create_table
 from chortle.lambda_function import lambda_handler
 from moto import mock_dynamodb2
 
@@ -16,48 +17,17 @@ TEST_EVENT = {
 @pytest.fixture(scope="function")
 def table():
     with mock_dynamodb2():
-        os.environ["CHORTLE_DYNAMO_TABLE"] = "test-table"
-        yield boto3.resource("dynamodb", region_name="us-west-2").create_table(
-            TableName=os.environ["CHORTLE_DYNAMO_TABLE"],
-            AttributeDefinitions=[
-                {"AttributeName": "button_serial", "AttributeType": "S"},
-                {"AttributeName": "click_type", "AttributeType": "S"},
-            ],
-            KeySchema=[
-                {"AttributeName": "button_serial", "KeyType": "HASH"},
-                {"AttributeName": "click_type", "KeyType": "RANGE"},
-            ],
-        )
+        os.environ["CHORTLE_DYNAMO_TABLE"] = "chortle"
+        yield create_table()
 
 
-def _put_item(
-    table,
-    strategy,
-    button_serial=TEST_SERIAL,
-    click_type="SINGLE",
-    active=True,
-    chore="test-chore",
-    last_pressed_time=0,
-    reset_time_seconds=0,
-    dependent=None,
-):
-    item = {
-        "button_serial": button_serial,
-        "click_type": click_type,
-        "active": active,
-        "chore": chore,
-        "last_pressed_time": last_pressed_time,
-        "reset_time_seconds": reset_time_seconds,
-        "strategy": strategy,
-    }
-    if dependent:
-        item["dependent"] = dependent
-
-    table.put_item(Item=item)
+@mock_dynamodb2
+def test_build_table():
+    build_chortle_table()
 
 
 def test_periodic_strategy(table):
-    _put_item(table, "PERIODIC")
+    table.put_item(Item=asdict(Chore(button_serial=TEST_SERIAL, strategy="PERIODIC")))
     lambda_handler(TEST_EVENT, None)
     response = table.get_item(
         Key={"button_serial": TEST_SERIAL, "click_type": "SINGLE"}
@@ -66,24 +36,39 @@ def test_periodic_strategy(table):
     assert item["last_pressed_time"] > 0
 
 
-@pytest.mark.parametrize("starting_active_state", [False, True])
-def test_toggle_strategy(table, starting_active_state):
-    _put_item(table, "TOGGLE", active=starting_active_state)
+@pytest.mark.parametrize("initial_state", [False, True])
+def test_toggle_strategy(table, initial_state):
+    table.put_item(
+        Item=asdict(
+            Chore(button_serial=TEST_SERIAL, strategy="TOGGLE", active=initial_state)
+        )
+    )
     lambda_handler(TEST_EVENT, None)
     response = table.get_item(
         Key={"button_serial": TEST_SERIAL, "click_type": "SINGLE"}
     )
     item = response["Item"]
     assert item["last_pressed_time"] > 0
-    assert item["active"] != starting_active_state
+    assert item["active"] != initial_state
 
 
 def test_modal_toggle_strategy(table):
     dependent_serial = f"{TEST_SERIAL[:-1]}1"
-    _put_item(
-        table, "MODAL_TOGGLE", active=False, dependent=[dependent_serial, "SINGLE"],
+    table.put_item(
+        Item=asdict(
+            Chore(
+                button_serial=TEST_SERIAL,
+                strategy="MODAL_TOGGLE",
+                active=False,
+                dependent=[dependent_serial, "SINGLE"],
+            )
+        )
     )
-    _put_item(table, "TOGGLE", active=True, button_serial=dependent_serial)
+    table.put_item(
+        Item=asdict(
+            Chore(button_serial=dependent_serial, strategy="TOGGLE", active=True)
+        )
+    )
     lambda_handler(TEST_EVENT, None)
     response = table.get_item(
         Key={"button_serial": dependent_serial, "click_type": "SINGLE"}
@@ -99,6 +84,8 @@ def test_modal_toggle_strategy(table):
 
 
 def test_unknown_strategies_handled(table):
-    _put_item(table, "Fake-strategy")
+    table.put_item(
+        Item=asdict(Chore(button_serial=TEST_SERIAL, strategy="fake-strategy"))
+    )
     lambda_handler(TEST_EVENT, None)
     assert True
