@@ -3,10 +3,15 @@ resources. If these resources are ever lost or corrupted, this allows them to be
 recreated from their initial state.
 """
 from dataclasses import asdict, dataclass
+from tempfile import SpooledTemporaryFile
 from typing import List, Optional
+from zipfile import ZipFile
 
 import boto3
 from mypy_boto3_dynamodb.service_resource import Table
+
+TABLE_NAME = "chortle"
+LAMBDA_FUNCTION_NAME = "chortle-button-press"
 
 
 @dataclass(frozen=True)
@@ -66,10 +71,9 @@ def create_table() -> Table:
     """Creates an empty Chortle table in DynamoDB.
     :return: The DynamoDB table.
     """
-    table_name = "chortle"
     client = boto3.client("dynamodb")
     client.create_table(
-        TableName=table_name,
+        TableName=TABLE_NAME,
         AttributeDefinitions=[
             {"AttributeName": "button_serial", "AttributeType": "S"},
             {"AttributeName": "click_type", "AttributeType": "S"},
@@ -81,6 +85,28 @@ def create_table() -> Table:
         ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
     )
     waiter = client.get_waiter("table_exists")
-    waiter.wait(TableName=table_name, WaiterConfig={"Delay": 1})
+    waiter.wait(TableName=TABLE_NAME, WaiterConfig={"Delay": 1})
 
-    return boto3.resource("dynamodb").Table(table_name)
+    return boto3.resource("dynamodb").Table(TABLE_NAME)
+
+
+def update_lambda() -> None:
+    """Updates the Chortle lambda function with the latest code in this repository."""
+    client = boto3.client("lambda", "us-west-2")
+
+    with SpooledTemporaryFile() as payload:
+        with ZipFile(payload, "w") as zipfile:
+            zipfile.write("chortle/__init__.py")
+            zipfile.write("chortle/lambda_function.py")
+            zipfile.write("chortle/strategy_handler.py")
+
+        payload.seek(0)
+
+        client.update_function_code(
+            FunctionName=LAMBDA_FUNCTION_NAME, ZipFile=payload.read()
+        )
+
+    client.update_function_configuration(
+        FunctionName=LAMBDA_FUNCTION_NAME,
+        Environment={"Variables": {"CHORTLE_DYNAMO_TABLE": TABLE_NAME}},
+    )

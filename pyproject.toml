@@ -19,6 +19,7 @@ moto = "^1.3.14"
 
 [tool.poetry.scripts]
 build-table = "chortle.build:build_chortle_table"
+update-lambda = "chortle.build:update_lambda"
 
 [build-system]
 requires = ["poetry>=0.12"]

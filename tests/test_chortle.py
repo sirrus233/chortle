@@ -1,10 +1,12 @@
 import os
 from dataclasses import asdict
 
+import boto3
+import chortle.build
 import pytest
-from chortle.build import Chore, build_chortle_table, create_table
+from chortle.build import Chore
 from chortle.lambda_function import lambda_handler
-from moto import mock_dynamodb2
+from moto import mock_dynamodb2, mock_lambda
 
 TEST_SERIAL = "0000000000000000"
 TEST_EVENT = {
@@ -18,12 +20,25 @@ TEST_EVENT = {
 def table():
     with mock_dynamodb2():
         os.environ["CHORTLE_DYNAMO_TABLE"] = "chortle"
-        yield create_table()
+        yield chortle.build.create_table()
 
 
 @mock_dynamodb2
 def test_build_table():
-    build_chortle_table()
+    chortle.build.build_chortle_table()
+
+
+@mock_lambda
+def test_update_lambda():
+    client = boto3.client("lambda", "us-west-2")
+    client.create_function(
+        FunctionName="chortle-button-press",
+        Runtime="python3.8",
+        Role="",
+        Handler="",
+        Code={"ZipFile": b"123"},
+    )
+    chortle.build.update_lambda()
 
 
 def test_periodic_strategy(table):
