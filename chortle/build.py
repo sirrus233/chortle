@@ -31,6 +31,7 @@ def build_chortle_table() -> None:
     """Construct a new instance of the Chortle database, populate it, and upload."""
     table = create_table()
 
+    # Example chores to start off the database
     chores = [
         Chore(
             button_serial="G030JF0520662DJS",

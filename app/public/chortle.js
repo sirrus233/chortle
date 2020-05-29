@@ -1,8 +1,12 @@
 const PORT = 5000;
 const QUERY_ADDRESS = `http://localhost:${PORT}/query`;
-//const POLL_FREQUENCY_SECONDS = 0.5;
-const POLL_FREQUENCY_SECONDS = 4;
+
+// How often the remote database should be queried
+const POLL_FREQUENCY_SECONDS = 0.5;
+// Chore timeouts above this value will not be displayed (to avoid the unnecessary pressure
+// of a constantly ticking clock).
 const MAX_CHORE_DISPLAY_TIME = 3*60*60;
+
 var CHORE_DATA = [];
 
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
@@ -24,9 +28,7 @@ const TABLE_DATA_FUNCTIONS = {
     "chore-time": function (choreRow) {
         var data = document.createElement("TD");
         var timeRemaining = getTimeRemaining(choreRow)
-        if (timeRemaining === null) {
-            return data;
-        } else if (!choreRow.active.BOOL || timeRemaining > MAX_CHORE_DISPLAY_TIME) {
+        if (timeRemaining === null || !choreRow.active.BOOL || timeRemaining > MAX_CHORE_DISPLAY_TIME) {
             return data;
         } else {
             data.innerText = getStringFromTime(getTimeRemaining(choreRow));

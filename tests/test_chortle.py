@@ -26,6 +26,9 @@ def table():
 @mock_dynamodb2
 def test_build_table():
     chortle.build.build_chortle_table()
+    client = boto3.client("dynamodb", "us-west-2")
+    response = client.list_tables()
+    assert "chortle" in response["TableNames"]
 
 
 @mock_lambda
@@ -38,7 +41,11 @@ def test_update_lambda():
         Handler="",
         Code={"ZipFile": b"123"},
     )
+    response = client.get_function(FunctionName="chortle-button-press")
+    pre_update_size = response["Configuration"]["CodeSize"]
     chortle.build.update_lambda()
+    response = client.get_function(FunctionName="chortle-button-press")
+    assert response["Configuration"]["CodeSize"] > pre_update_size
 
 
 def test_periodic_strategy(table):

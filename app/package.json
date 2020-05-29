@@ -1,0 +1,23 @@
+{
+  "name": "chortle",
+  "version": "0.1.0",
+  "description": "IoT based chore tracking dashboard",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirrus233/chortle.git"
+  },
+  "author": "Bradley Sherman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sirrus233/chortle/issues"
+  },
+  "homepage": "https://github.com/sirrus233/chortle#readme",
+  "dependencies": {
+    "aws-sdk": "^2.686.0",
+    "express": "^4.17.1"
+  }
+}
