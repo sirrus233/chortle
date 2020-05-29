@@ -1,12 +1,16 @@
-const POLL_FREQUENCY_SECONDS = 0.5;
+const PORT = 5000;
+const QUERY_ADDRESS = `http://localhost:${PORT}/query`;
+//const POLL_FREQUENCY_SECONDS = 0.5;
+const POLL_FREQUENCY_SECONDS = 4;
 const MAX_CHORE_DISPLAY_TIME = 3*60*60;
+var CHORE_DATA = [];
 
 const TABLE_HEADERS = ["Chore", "Status", "Time Remaining"];
 const TABLE_DATA_FIELDS = ["chore-name", "chore-status", "chore-time"];
 const TABLE_DATA_FUNCTIONS = {
     "chore-name": function (choreRow) {
         var data = document.createElement("TD");
-        data.innerText = choreRow.chore.S;
+        data.innerText = choreRow.chore_name.S;
         return data;
     },
 
@@ -20,17 +24,26 @@ const TABLE_DATA_FUNCTIONS = {
     "chore-time": function (choreRow) {
         var data = document.createElement("TD");
         var timeRemaining = getTimeRemaining(choreRow)
-        if (!choreRow.active.BOOL || timeRemaining > MAX_CHORE_DISPLAY_TIME) return data;
-        data.innerText = getStringFromTime(getTimeRemaining(choreRow));
-        return data;
+        if (timeRemaining === null) {
+            return data;
+        } else if (!choreRow.active.BOOL || timeRemaining > MAX_CHORE_DISPLAY_TIME) {
+            return data;
+        } else {
+            data.innerText = getStringFromTime(getTimeRemaining(choreRow));
+            return data;
+        }
     }
 }
 
 function getTimeRemaining(choreRow) {
-    var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
-    var now = Math.floor(new Date().getTime() / 1000);
-    var timeRemaining = choreExpireTime - now;
-    return timeRemaining;
+    if ('last_pressed_time' in choreRow) {
+        var choreExpireTime = parseInt(choreRow.last_pressed_time.N) + parseInt(choreRow.reset_time_seconds.N);
+        var now = Math.floor(new Date().getTime() / 1000);
+        var timeRemaining = choreExpireTime - now;
+        return timeRemaining;
+    } else {
+        return null
+    }
 }
 
 function getStringFromTime(timeValueSeconds) {
@@ -75,24 +88,16 @@ function buildTable() {
     }
 }
 
-var CHORE_DATA = [];
-function pollDynamo(dynamodb) {
-    dynamodb.scan({TableName: "chortle-model"}, function (err, data) {
-        if (err) console.log(err, err.stack);
-        else CHORE_DATA = data.Items;
-    });
+function queryServer() {
+    request = new XMLHttpRequest();
+    request.open("GET", QUERY_ADDRESS, true);
+    request.onreadystatechange = function () {
+        if (request.readyState === 4 && request.status === 200) {
+            CHORE_DATA = JSON.parse(request.responseText);
+        }
+    };
+    request.send();
 }
 
-function setupAWSConfig() {
-    AWS.config.update({
-        region: 'us-east-2',
-        credentials: new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'us-east-2:23c381d2-a8c3-4448-96f6-753b6cb4e374'
-        })
-    });
-}
-
-setupAWSConfig();
-var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-setInterval(pollDynamo, POLL_FREQUENCY_SECONDS*1000, dynamodb);
+setInterval(queryServer, POLL_FREQUENCY_SECONDS*1000);
 setInterval(buildTable, 1000);
